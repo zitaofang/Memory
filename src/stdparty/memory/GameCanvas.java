@@ -19,8 +19,8 @@ public final class GameCanvas {
 		
 		@Override
 		protected void paintComponent(Graphics g) {
-			int l = getSize().height / GameLogic.getInstance().getColNum();
-			int w = getSize().width / GameLogic.getInstance().getRowNum();
+			int l = (int) (getSize().height / (float) GameLogic.getInstance().getColNum());
+			int w = (int) (getSize().width / (float) GameLogic.getInstance().getRowNum());
 			for(int i = 0; i < GameLogic.getInstance().getRowNum(); i++) {
 				for(int j = 0; j < GameLogic.getInstance().getColNum(); j++) {
 					Block current = GameLogic.getInstance().getBlock(i, j);

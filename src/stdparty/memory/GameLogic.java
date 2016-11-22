@@ -1,13 +1,16 @@
 package stdparty.memory;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
+import stdparty.memory.Block.Status;
 
 public class GameLogic {
 	private boolean stopUpdating = true;
-	private long startTime = 0;
-	private long timeBeforePause = 0;
+	private Instant startTime;
+	private Duration timeBeforePause = null;
 	private int mistake = 0;
 	private int remain;
 	private int rowNum;
@@ -16,7 +19,7 @@ public class GameLogic {
 	private Block blockData[][] = null;
 	
 	public interface GraphicsInterface {
-		public void updateTimer(long time);
+		public void updateTimer(Duration time);
 		public void updateBlock();
 		public void notifyGameOver();
 	}
@@ -25,13 +28,16 @@ public class GameLogic {
 	private class TimerThread extends Thread {
 		@Override
 		public void run() {
-			if(!stopUpdating)
-				graphics.updateTimer(System.currentTimeMillis() + timeBeforePause - startTime);
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			while(true) {
+				if(!stopUpdating)
+					GameLogic.this.graphics.updateTimer(Duration.between(GameLogic.this.startTime
+							, Clock.systemDefaultZone().instant()));
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -50,6 +56,7 @@ public class GameLogic {
 	}
 	
 	private GameLogic(GraphicsInterface g, int r, int c) {
+		startTime = null;
 		blockData = new Block[r][c];
 		graphics = g;
 		rowNum = r;
@@ -62,42 +69,54 @@ public class GameLogic {
 	
 	public void startGame() {
 		mistake = 0;
-		stopUpdating = false;
 		remain = rowNum * colNum / 2;
 		blockData = generateBlock(new Block[rowNum][colNum]);
-		startTime = System.currentTimeMillis();
+		startTime = Clock.systemDefaultZone().instant();
+		stopUpdating = false;
 	}
 
 	public void clickObject(int r, int c) {
 		if(stopUpdating)
 			return;
 		Block target = blockData[r][c];
+		if(flipedBlock == target || target.getStatus() == Block.Status.Cleared)
+			return; // Ignore any interaction with the block itself and other cleared blocks
 		if(flipedBlock == null)
 			flipedBlock = target.flip();
-		else if(flipedBlock.equals(target))
-			flipedBlock = clear(flipedBlock, target);
-		else
-			flipedBlock = recordMistake();
+		else {
+			target.flip();
+			if(flipedBlock.equals(target) && flipedBlock != target)
+				flipedBlock = clear(flipedBlock, target);
+			else
+				flipedBlock = recordMistake(target);
+		}
 	}
 	
 	public void pause() {
-		timeBeforePause += System.currentTimeMillis() - startTime;
-		startTime = 0;
 		stopUpdating = true;
+		Duration timePassed = Duration.between(Clock.systemDefaultZone().instant(), startTime);
+		if(timeBeforePause == null)
+			timeBeforePause = timePassed;
+		else
+			timeBeforePause.plus(timePassed);
+		startTime = null;
 	}
 	
 	public void resume() {
-		startTime = timeBeforePause;
+		startTime = Clock.systemDefaultZone().instant().minus(timeBeforePause);
 		stopUpdating = false;
 	}
 	
-	private Block recordMistake() {
+	private Block recordMistake(Block anotherBlock) {
 		mistake++;
+		anotherBlock.flip();
+		anotherBlock.reset();
 		flipedBlock.reset();
 		return null;
 	}
 	
 	private Block clear(Block b1, Block b2) {
+		flipedBlock = null;
 		if(--remain == 0) {
 			stopUpdating = true;
 			graphics.notifyGameOver();
