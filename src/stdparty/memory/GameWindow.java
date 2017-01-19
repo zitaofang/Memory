@@ -6,16 +6,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Image;
 
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-import com.jgoodies.forms.layout.FormSpecs;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
-import javax.swing.SwingUtilities;
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import java.awt.event.MouseAdapter;
@@ -29,13 +23,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.GridLayout;
-import java.awt.GridBagLayout;
-import javax.swing.BoxLayout;
-import net.miginfocom.swing.MigLayout;
 
 public class GameWindow implements GameLogic.GraphicsInterface {
 
